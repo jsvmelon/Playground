@@ -1,12 +1,5 @@
 var task2 = require('./task2.js')
 var xhr = require('xhr2')
-
-function formatResult(caption, result) {
-    return caption + '\n' +
-        'Percentage:     ' + result.percentage + '\n' +
-        'Date:       ' + result.date
-}
-
 var verbose = false
 
 process.argv.forEach(function(value, index, array) {
@@ -23,13 +16,11 @@ function getData() {
     var request = new xhr.XMLHttpRequest()
 
     request.onreadystatechange = function() {
-        console.log('readystate: ' + request.readyState)
-        console.log('status:     ' + request.status)
         if (request.readyState === 4 && request.status === 200) {
             var res = task2.findMinMax(request.responseText)
 
-            console.log(formatResult('Min:', res.min))
-            console.log(formatResult('Max:', res.max))
+            console.log(task2.formatResult('Min:', res.min))
+            console.log(task2.formatResult('Max:', res.max))
 
             if (verbose === true) {
                 console.log('Errors:\n' + res.errors)
@@ -37,7 +28,7 @@ function getData() {
         }
     }
 
-    request.open('GET', 'https://www.quandl.com/api/v3/datasets/WIKI/AAPL.json?start_date=2010-01-01&end_date=2014-12-31', true)
+    request.open('GET', 'https://www.quandl.com/api/v3/datasets/WIKI/AAPL.json?api_key=byQHh5K2zT4MKss4ztMG&start_date=2010-01-01&end_date=2014-12-31', true)
     request.send()
 }
 
