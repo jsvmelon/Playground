@@ -2,7 +2,7 @@
   "name": "man-training",
   "version": "1.0.0",
   "description": "training set",
-  "main": "task1.js",
+  "main": "task2.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,5 +11,10 @@
     "url": "."
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jasmine": "^2.3.2",
+    "jasmine-node": "^1.14.5",
+    "xhr2": "^0.1.3"
+  }
 }

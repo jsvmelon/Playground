@@ -8,11 +8,9 @@ function constructResult(oldDate, newDate, percentage) {
     }
 }
 
-fs.readFile('./AAPL.json', 'utf8', function(err, data) {
-    if (err) {
-        return console.log(err)
-    }
+exports.constructResult = constructResult
 
+function findMinMax(data) {
     var jsonObj = JSON.parse(data)
 
     // the jsonObj is an array of an array - so the value is an array again
@@ -24,15 +22,17 @@ fs.readFile('./AAPL.json', 'utf8', function(err, data) {
     }).reverse();
 
     var max, min
+    var errors = ''
 
     structuredArray.forEach(function(entry, index, d) {
-        if (index > 10) {
+        if (index > 6) {
             var startindex = index - 1
 
-            while (startindex > index - 10 && d[startindex] !== undefined) {
+            while (startindex >= 0 && startindex > index - 10 && d[startindex] !== undefined) {
+
                 var diff = Math.round((entry.date - d[startindex].date) / (1000 * 3600 * 24), 0)
 
-                if (diff >= 7) {
+                if (diff === 7) {
                     var percentage = (entry.value / d[startindex].value) - 1
                     if (max === undefined || percentage > max.percentage) {
                         max = constructResult(d[startindex].date, entry.date, percentage)
@@ -43,15 +43,24 @@ fs.readFile('./AAPL.json', 'utf8', function(err, data) {
                     }
 
                     return
+                } else if (diff > 7) {
+                    // due to bank holidays the 7-day difference is not always defined
+                    errors = errors + 'There is no 7 day difference in the data for date: ' + entry.date + '\n'
+                    return
                 }
                 startindex--
             }
 
             // if we arrive here there was an error
-            console.log('an error occurred')
+            errors = errors + '\nA generic error occurred'
         }
     })
 
-    console.log('\nMax:\nDate = ' + max.date + '\nPercentage = ' + max.percentage + '\nOld Date = ' + max.oldDate + '\n')
-    console.log('Min:\nDate = ' + min.date + '\nPercentage = ' + min.percentage + '\nOld Date = ' + min.oldDate)
-})
+    return {
+        max: max,
+        min: min,
+        errors: errors
+    }
+}
+
+exports.findMinMax = findMinMax

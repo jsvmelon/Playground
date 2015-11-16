@@ -2,6 +2,14 @@
     "env": {
         "node": true
     },
+    "globals": {
+       "expect": true,
+       "fc": true,
+       "it": true,
+       "describe": true,
+       "beforeEach": true,
+       "jasmine": true
+   },
     "rules": {
         "comma-dangle": 2,
         "no-cond-assign": 2,
