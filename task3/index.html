@@ -1,0 +1,43 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foundation for Sites</title>
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" type="text/css" href="slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="slick/slick-theme.css"/>
+  </head>
+  <body>
+
+  <div class="row">
+    <div class="large-12 columns">
+      <h1>Welcome to the Quandl WIKI Database</h1>
+      <p>See below the datasets included in the WIKI Database</p>
+      <hr/>
+    </div>
+  </div>
+
+  <div id="waiter" class="row">
+    <div class="large-1 column large-centered">
+      <img src="loading_spinner.gif" alt="Loading..." />
+    </div>
+  </div>
+
+  <div class="row">
+
+    <div class="large-8 columns large-centered medium-centered small-centered myslider">
+      <!-- the content is filled in dynamically by getDatasets.js -->
+    </div>
+  
+  </div>
+
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/what-input/what-input.js"></script>
+    <script src="bower_components/foundation-sites/dist/foundation.js"></script>
+    <script src="js/app.js"></script>
+    <script type="text/javascript" src="slick/slick.min.js"></script>
+    <script src="getDatasets.js"></script>
+  </body>
+</html>

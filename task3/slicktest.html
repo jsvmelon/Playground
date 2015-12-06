@@ -1,0 +1,27 @@
+<html>
+  <head>
+  <title>My Now Amazing Webpage</title>
+  <link rel="stylesheet" type="text/css" href="slick/slick.css"/>
+  <link rel="stylesheet" type="text/css" href="slick/slick-theme.css"/>
+  </head>
+  <body>
+
+  <div class="your-class">
+    <div><h1>1</h1></div>
+    <div><h1>2</h1></div>
+    <div><h1>3</h1></div>
+  </div>
+
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script type="text/javascript" src="slick/slick.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function(){
+      $('.your-class').slick({
+        dots: true,
+      });
+    });
+  </script>
+
+  </body>
+</html>
