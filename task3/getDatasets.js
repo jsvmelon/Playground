@@ -26,9 +26,6 @@
                 }   
                 
                 div = document.createElement("div")
-                //if (items % 4 === 0) { div.className = "large-2 columns large-offset-2"}
-                //else if (items % 4 === 3) { div.className = "large-2 columns end" }
-                //else div.className = "large-2 columns"
                 div.className = "large-3 columns"
                 rowDiv.appendChild(div)
                 
