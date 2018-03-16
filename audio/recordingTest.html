@@ -1,12 +1,16 @@
 <html>
 <head>
-    <script data-main="scripts/first_recording_test" src="scripts/require.js"></script>
+    <script data-main="scripts/entry.js" src="scripts/require.js"></script>
 </head>
 
 <audio controls>
-    <source src="Kung Fu Fighting.mp3" type="audio/mpeg">
+    <source id="src" name="audiosource" src="" type="audio/mpeg">
     Unsupported audio tag.
 </audio>
+
+<form>
+    <input id="file" name="fileinput" type="file" />
+</form>
 
 <canvas id="canvas"></canvas>
 
