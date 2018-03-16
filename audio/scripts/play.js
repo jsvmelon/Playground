@@ -16,14 +16,14 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 // bufferSize and fMax * 2 define the duration of an fft: fMax*2 / bufferSize in seconds
                 bufferSize = fftBinCount * 2, 
                 height = window.innerHeight,
-                width = window.innerWidth/8,
+                width = window.innerWidth/2,
                 drawHeight = height - margin.top - margin.bottom,
-                drawWidth = width - margin.left - margin.right;
+                drawWidth = width - margin.left - margin.right,
+                fBin = sampleRate / fftBinCount / 2, // frequency range per bin
+                numberOfRelevantBins = Math.ceil(fMax / fBin);
                 //fftBinCount = Math.pow(2,Math.floor(Math.log2(drawHeight)));
 
-            var fBin = sampleRate / fftBinCount / 2; // frequency range per bin
-
-            canvas.width = width;
+            canvas.width = width+1;
             canvas.height = height;
             var ctx = canvas.getContext("2d");
             var once = false;
@@ -36,11 +36,13 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
 
             var sourceNodeFile = audioContext.createMediaElementSource(myAudio);
             var analyseFile = audioContext.createAnalyser();
-            analyseFile.fftSize = fftBinCount * 2;
+            analyseFile.smoothingTimeConstant = 0;
             
             // the frequency bin count of the fft is half the buffer size
             // this defines the resolution of the frequency analysis:
             // one bucket has a width of (sample rate / 2) / frequency bin count
+            analyseFile.fftSize = fftBinCount * 2;
+            
             //const fftData = new Float32Array(fftBinCount);
             
             //sourceNodeFile.connect(analyseFile);
@@ -74,12 +76,16 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
 
             function getLowerThreshold(data) {
                 // find out which are the x strongest dB measurements
-                let dataCopy = data.map(function(x){return x}); 
+                let dataCopy = data.filter(function(value,index){
+                    return index < numberOfRelevantBins;
+                }); 
+
                 dataCopy.sort();
+
                 //var uva = Math.floor(fftBinCount / 200);
                 let uva = 10; // denotes the number of datapoints considered to determine the threshold
-                let max = dataCopy[fftBinCount-1];
-                let ltuv = dataCopy[fftBinCount-uva];
+                let max = dataCopy[dataCopy.length-1];
+                let ltuv = dataCopy[dataCopy.length-uva];
                 let upperRange = max - ltuv;
 
                 return facts = {
@@ -90,18 +96,16 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
 
             function draw(timestamp) {        
                 if (!once) {
-                    console.log("Number of bins: " + fftBinCount);
-                    console.log("pixelheight:" + drawHeight);                    
-                    console.log(getYforBin(1) - getYforBin(0));
-                    console.log("getYforBin(0):" + getYforBin(0));
-                    console.log("getYforBin(1):" + getYforBin(1));
-                    console.log("getYforBin(fftBinCount-1):" + getYforBin(fftBinCount-1))
-                    console.log("frequency resolution:" + (sampleRate / 2) / fftBinCount + " Hz");
+                    printParameters();
                     once = true;
                 }
 
                 // scroll to the left by one pixel
-                let image = ctx.getImageData(margin.left+2,margin.top,width-margin.left-margin.right,height-margin.top-margin.bottom-2);
+                let image = ctx.getImageData(
+                    margin.left+2,
+                    margin.top,
+                    width-margin.left-margin.right,
+                    height-margin.top-margin.bottom-2);
                 ctx.putImageData(image,margin.left+1,margin.top);
 
                 drawData(analyseFile,'255,0,0');
@@ -109,7 +113,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
 
                 // call requestAnimationFrame again for the next frame (60 fps)
                 //window.requestAnimationFrame(draw);
-                setTimeout(draw, bufferSize/sampleRate * 1000);
+                setTimeout(draw, bufferSize/sampleRate * 50);
             }
 
             function drawData(analyser,color) {
@@ -125,7 +129,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                         return;
                     }
 
-                    if (data[i] >= facts.ltuv) {
+                    if (data[i] > analyser.minDecibels && data[i] >= facts.ltuv) {
                         let strength = (data[i]-facts.ltuv)/facts.upperRange;                
                         ctx.fillStyle = 'rgb(' + color + ',' + strength + ')';
                         ctx.fillRect(width-margin.right-1,getYforBin(i),1,1);
@@ -145,6 +149,16 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                     }
                 });
                 */
+            }
+
+            function printParameters() {
+                console.log("Number of bins: " + fftBinCount);
+                console.log("pixelheight:" + drawHeight);                    
+                console.log(getYforBin(1) - getYforBin(0));
+                console.log("getYforBin(0):" + getYforBin(0));
+                console.log("getYforBin(1):" + getYforBin(1));
+                console.log("getYforBin(fftBinCount-1):" + getYforBin(fftBinCount-1))
+                console.log("frequency resolution:" + (sampleRate / 2) / fftBinCount + " Hz");
             }
             
         }
