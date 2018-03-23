@@ -1,6 +1,6 @@
 define(function() {
     return {
-        create: function(audioContext,targetNode,connectFile,draw) {
+        create: function(audioContext,targetNode,connectFile,draw,interval) {
             let constraints = {
                 audio: true,
                 video: false
@@ -16,7 +16,8 @@ define(function() {
                 sourceNodeMic.connect(targetNode);
                 targetNode.connect(audioContext.destination);
                 connectFile();
-                draw();
+                console.log("repeat interval: " + interval);
+                let id = setInterval(draw, interval);
             })
             .catch(function(err) {
                 console.log(err)

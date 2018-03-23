@@ -16,7 +16,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 // bufferSize and fMax * 2 define the duration of an fft: fMax*2 / bufferSize in seconds
                 bufferSize = fftBinCount * 2, 
                 height = window.innerHeight,
-                width = window.innerWidth/2,
+                width = window.innerWidth,
                 drawHeight = height - margin.top - margin.bottom,
                 drawWidth = width - margin.left - margin.right,
                 fBin = sampleRate / fftBinCount / 2, // frequency range per bin
@@ -43,22 +43,10 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
             // one bucket has a width of (sample rate / 2) / frequency bin count
             analyseFile.fftSize = fftBinCount * 2;
             
-            //const fftData = new Float32Array(fftBinCount);
-            
-            //sourceNodeFile.connect(analyseFile);
-            //analyseFile.connect(audioContext.destination);
-
-            //let oscilSource = getOscillatorSourceNode.create(audioContext);
-            //oscilSource.connect(analyseFile);
-            //oscilSource.start();
-
             // get the microphone - once the user agreed draw will be called in the promise
             var analyseMic = audioContext.createAnalyser();
             analyseMic.fftSize = fftBinCount * 2;
-            getMicSourceNode.create(audioContext,analyseMic,connectFile,draw);
-
-            //myAudio.load();
-            //draw();
+            getMicSourceNode.create(audioContext,analyseMic,connectFile,draw,bufferSize/sampleRate);
 
             function connectFile() {
                 sourceNodeFile.connect(analyseFile);
@@ -83,7 +71,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 dataCopy.sort();
 
                 //var uva = Math.floor(fftBinCount / 200);
-                let uva = 10; // denotes the number of datapoints considered to determine the threshold
+                let uva = 2; // sets the number of datapoints considered to determine the threshold
                 let max = dataCopy[dataCopy.length-1];
                 let ltuv = dataCopy[dataCopy.length-uva];
                 let upperRange = max - ltuv;
@@ -94,7 +82,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 }
             }
 
-            function draw(timestamp) {        
+            function draw() {        
                 if (!once) {
                     printParameters();
                     once = true;
@@ -109,11 +97,10 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 ctx.putImageData(image,margin.left+1,margin.top);
 
                 drawData(analyseFile,'255,0,0');
-                //drawData(analyseMic,'0,255,0');
+                drawData(analyseMic,'0,255,0');
 
                 // call requestAnimationFrame again for the next frame (60 fps)
                 //window.requestAnimationFrame(draw);
-                setTimeout(draw, bufferSize/sampleRate * 50);
             }
 
             function drawData(analyser,color) {
@@ -124,10 +111,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
 
                 for (var i = 0; i < fftBinCount ; i++) {                    
                     
-                    if (i * fBin > fMax) {
-                        //console.log("highest bin:" + i);
-                        return;
-                    }
+                    if (i * fBin > fMax) return;
 
                     if (data[i] > analyser.minDecibels && data[i] >= facts.ltuv) {
                         let strength = (data[i]-facts.ltuv)/facts.upperRange;                
@@ -135,20 +119,6 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                         ctx.fillRect(width-margin.right-1,getYforBin(i),1,1);
                     }
                 }
-
-                /*
-                data.map(function(currentValue,index){
-                    // we only draw for the strongest frequencies
-                    if (currentValue >= facts.ltuv) {
-                        let fBin = sampleRate / fftBinCount / 2; // frequency range per bin
-                        if (index * fBin <= fMax) {
-                            let strength = (currentValue-facts.ltuv)/facts.upperRange;                
-                            ctx.fillStyle = 'rgb(' + color + ',' + strength + ')';
-                            ctx.fillRect(width-margin.right-1,getYforBin(index),1,1);
-                        }
-                    }
-                });
-                */
             }
 
             function printParameters() {
