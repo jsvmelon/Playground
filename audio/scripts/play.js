@@ -1,5 +1,5 @@
-define(['initCanvas','getOscillatorSourceNode','getMicSourceNode'],
-function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
+define(['initCanvas','getOscillatorSourceNode','getMicSourceNode','d3','d3fc'],
+function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
     return {
         playFile: function(canvas,audioContext) {
             var margin = {
@@ -130,7 +130,8 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode) {
                 console.log("getYforBin(fftBinCount-1):" + getYforBin(fftBinCount-1))
                 console.log("frequency resolution:" + (sampleRate / 2) / fftBinCount + " Hz");
             }
-            
+            var data = fc.randomFinancial()(50);
+
         }
     }
 });

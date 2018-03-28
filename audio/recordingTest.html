@@ -1,6 +1,22 @@
 <html>
 <head>
-    <script data-main="scripts/entry.js" src="scripts/require.js"></script>
+    <script src="scripts/lib/require.js"></script>
+    <script>
+        requirejs.config({
+            baseUrl: 'scripts/lib',
+            paths: {
+                // d3: '../node_modules/d3/dist/d3',
+                // d3fc: '../node_modules/d3fc/build/d3fc',
+                // "d3-array": '../node_modules/d3-array/build/d3-array',
+                // "d3-scale": '../node_modules/d3-scale/dist/d3-scale'
+                play: '../play',
+                initCanvas: '../initCanvas',
+                getMicSourceNode: '../getMicSourceNode',
+                getOscillatorSourceNode: '../getOscillatorSourceNode'
+            }
+        });
+        require(["../entry"], function () {});
+    </script>
 </head>
 
 <audio controls>
@@ -13,5 +29,7 @@
 </form>
 
 <canvas id="canvas"></canvas>
+
+<div id="chart" style="width: 100%; height: 250px"></div>
 
 </html>
