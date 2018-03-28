@@ -1,5 +1,5 @@
 define(["play","d3","d3fc"], function(play,d3,fc) {
-    test();
+    // testD3fc();
 
     var fileElement = document.getElementById('file');
     fileElement.addEventListener('change',triggerPlay);
@@ -18,7 +18,7 @@ define(["play","d3","d3fc"], function(play,d3,fc) {
         }
     }
 
-    function test() {
+    function testD3fc() {
         var data = fc.randomFinancial()(50);
     
         var yExtent = fc.extentLinear()
