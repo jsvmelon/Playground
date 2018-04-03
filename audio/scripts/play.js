@@ -1,21 +1,24 @@
-define(['initCanvas','getOscillatorSourceNode','getMicSourceNode','d3','d3fc'],
-function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
+define(['getOscillatorSourceNode','getMicSourceNode','d3','d3fc'],
+function(getOscillatorSourceNode, getMicSourceNode, d3, fc) {
     return {
-        playFile: function(canvas,audioContext) {
+        playFile: function(audioContext) {
             var margin = {
                 left: 50,
                 right: 30,
                 top: 10,
                 bottom: 10
             }
-                
+
+            var d3Data = [];
+            var radius = 2;
+
             var sampleRate = audioContext.sampleRate,
                 fMin = 0,
                 fMax = 1200, //sampleRate / 4;
                 fftBinCount = Math.pow(2,13), // must be a power of 2
                 // bufferSize and fMax * 2 define the duration of an fft: fMax*2 / bufferSize in seconds
                 bufferSize = fftBinCount * 2, 
-                height = window.innerHeight,
+                height = window.innerHeight-150,
                 width = window.innerWidth,
                 drawHeight = height - margin.top - margin.bottom,
                 drawWidth = width - margin.left - margin.right,
@@ -23,17 +26,21 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
                 numberOfRelevantBins = Math.ceil(fMax / fBin);
                 //fftBinCount = Math.pow(2,Math.floor(Math.log2(drawHeight)));
 
-            canvas.width = width+1;
-            canvas.height = height;
-            var ctx = canvas.getContext("2d");
-            var once = false;
+            var yScaleHz = d3.scaleLinear()
+                .domain([0,fMax])
+                .range([drawHeight,0]);            
 
-            // setting up coordinates etc.
-            initCanvas.init(ctx,margin,fMax,width,height);
-                
+            var svg = d3.select("body").append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+            // add the y-axis
+            svg.append("g").call(d3.axisLeft(yScaleHz));
+
             // this is the html tag referencing the mp3 track
             var myAudio = document.querySelector('audio');
-
             var sourceNodeFile = audioContext.createMediaElementSource(myAudio);
             var analyseFile = audioContext.createAnalyser();
             analyseFile.smoothingTimeConstant = 0;
@@ -46,7 +53,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
             // get the microphone - once the user agreed draw will be called in the promise
             var analyseMic = audioContext.createAnalyser();
             analyseMic.fftSize = fftBinCount * 2;
-            getMicSourceNode.create(audioContext,analyseMic,connectFile,draw,bufferSize/sampleRate);
+            getMicSourceNode.create(audioContext,analyseMic,connectFile,draw,bufferSize/sampleRate*1000);
 
             function connectFile() {
                 sourceNodeFile.connect(analyseFile);
@@ -55,15 +62,12 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
             }
 
             // frequency for a bin: f_bin = sampleRate * (bin / fftBinCount)
-            // y-position is: drawHeight / sampleRate * f_bin
-            function getYforBin(bin) {
-                let fBin = sampleRate /2 * (bin / fftBinCount); // frequency this bin represents
-                let y = drawHeight / fMax * fBin;
-                return height - y - margin.bottom - 2;
+            function getFrequency(bin) {
+                return sampleRate /2 * (bin / fftBinCount);
             }
 
+            // find out which are the x strongest dB measurements
             function getLowerThreshold(data) {
-                // find out which are the x strongest dB measurements
                 let dataCopy = data.filter(function(value,index){
                     return index < numberOfRelevantBins;
                 }); 
@@ -71,7 +75,7 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
                 dataCopy.sort();
 
                 //var uva = Math.floor(fftBinCount / 200);
-                let uva = 2; // sets the number of datapoints considered to determine the threshold
+                let uva = 1; // sets the number of datapoints considered to determine the threshold
                 let max = dataCopy[dataCopy.length-1];
                 let ltuv = dataCopy[dataCopy.length-uva];
                 let upperRange = max - ltuv;
@@ -83,55 +87,65 @@ function(initCanvas, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
             }
 
             function draw() {        
-                if (!once) {
-                    printParameters();
-                    once = true;
-                }
-
-                // scroll to the left by one pixel
-                let image = ctx.getImageData(
-                    margin.left+2,
-                    margin.top,
-                    width-margin.left-margin.right,
-                    height-margin.top-margin.bottom-2);
-                ctx.putImageData(image,margin.left+1,margin.top);
-
-                drawData(analyseFile,'255,0,0');
-                drawData(analyseMic,'0,255,0');
-
-                // call requestAnimationFrame again for the next frame (60 fps)
-                //window.requestAnimationFrame(draw);
+                displayData(analyseFile, '0,0,255');
+                displayData(analyseMic, '0,255,0');
             }
 
-            function drawData(analyser,color) {
+            function displayData(analyser, color) {
                 let data = new Float32Array(fftBinCount);
                 analyser.getFloatFrequencyData(data);
 
                 let facts = getLowerThreshold(data);
 
+                // modify x coordinate of existing data points to scroll
+                d3Data = d3Data.map(function(d){
+                    d.x = d.x - (radius);
+                    return d;
+                })
+
+                // remove data that is too far left
+                d3Data = d3Data.filter(function(d){ 
+                    if (d.x > 0) return true; 
+                    else return false;
+                });
+
+                // adding data
                 for (var i = 0; i < fftBinCount ; i++) {                    
-                    
-                    if (i * fBin > fMax) return;
+                    if (i * fBin > fMax) break;
 
                     if (data[i] > analyser.minDecibels && data[i] >= facts.ltuv) {
-                        let strength = (data[i]-facts.ltuv)/facts.upperRange;                
-                        ctx.fillStyle = 'rgb(' + color + ',' + strength + ')';
-                        ctx.fillRect(width-margin.right-1,getYforBin(i),1,1);
+                        let newKey;
+                        if (d3Data.length === 0) newKey = 0;
+                        else newKey = d3Data[d3Data.length-1].key + 1;
+                        d3Data.push({
+                                x: width-margin.right-margin.left-1,
+                                y: yScaleHz(getFrequency(i)),
+                                key: newKey,
+                                signal: data[i]
+                        });
                     }
                 }
-            }
 
-            function printParameters() {
-                console.log("Number of bins: " + fftBinCount);
-                console.log("pixelheight:" + drawHeight);                    
-                console.log(getYforBin(1) - getYforBin(0));
-                console.log("getYforBin(0):" + getYforBin(0));
-                console.log("getYforBin(1):" + getYforBin(1));
-                console.log("getYforBin(fftBinCount-1):" + getYforBin(fftBinCount-1))
-                console.log("frequency resolution:" + (sampleRate / 2) / fftBinCount + " Hz");
-            }
-            var data = fc.randomFinancial()(50);
+                let selections = svg.selectAll(".dot")
+                .data(d3Data, function(d){ return d.key; });
 
+                selections
+                .attr("cx", function(d){ return d.x; });        // update existing
+                
+                selections
+                .enter().append("circle")                       // adding new
+                .attr("class", "dot")
+                .attr("r", radius)
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; })
+                .style("fill", function(d) {
+                    let strength = (d.signal-facts.ltuv)/facts.upperRange;                
+                    return 'rgb(' + color + ')'; 
+                });
+                
+                selections
+                .exit().remove();                               // remove 
+            }
         }
     }
 });
