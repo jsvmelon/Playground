@@ -2,7 +2,7 @@ define(["play","d3","d3fc"], function(play,d3,fc) {
     // testD3fc();
 
     var fileElement = document.getElementById('file');
-    fileElement.addEventListener('change',triggerPlay);
+    fileElement.addEventListener('change', triggerPlay);
 
     var audiosrc = document.getElementById('src');
     audiosrc.src = '';
@@ -17,6 +17,4 @@ define(["play","d3","d3fc"], function(play,d3,fc) {
             play.playFile(audioContext);
         }
     }
-
 });
-
