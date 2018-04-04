@@ -1,27 +1,10 @@
-define(['musicalNotes','getOscillatorSourceNode','getMicSourceNode','d3','d3fc'],
-function(musicalNotes, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
+define(['musicalNotes','getOscillatorSourceNode','getMicSourceNode','d3','d3fc','variables'],
+function(musicalNotes, getOscillatorSourceNode, getMicSourceNode, d3, fc, variables) {
     return {
         playFile: function(audioContext) {
-            var audioVariables = {
-                sampleRate: audioContext.sampleRate,
-                fMin: 0,
-                fMax: 1200, //sampleRate / 4;
-                fftBinCount: Math.pow(2,13), // must be a power of 2
-                get bufferSize() { return this.fftBinCount * 2; },
-                get fBin() { return this.sampleRate / this.fftBinCount; },
-                get numberOfRelevantBins() { return Math.ceil(this.fMax / this.fBin); }
-            }
-
-            var displayProperties = {
-                marginLeft: 50,
-                marginRight: 80,
-                marginTop: 10,
-                marginBottom: 10,
-                height: window.innerHeight-150,
-                width: window.innerWidth,
-                get drawHeight() { return this.height - this.marginTop - this.marginBottom; },
-                get drawWidth() { return this.width - this.marginLeft - this.marginRight; }
-            }
+            var v = variables.init(audioContext);
+            var audioVariables = v.audioVariables;
+            var displayProperties = v.displayProperties;
 
             var notesFrequency = musicalNotes.create();
             var d3Data = [];
@@ -49,7 +32,7 @@ function(musicalNotes, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
             // add the y-axis
             var axisHz = d3.axisLeft(yScaleHz);
             svg.append("g")
-            .attr("class","axisdisplayProperties.marginLeft")
+            .attr("class","axisLeft")
             .call(axisHz);
 
             var axisNote = d3.axisRight(yScaleNote);
@@ -87,7 +70,7 @@ function(musicalNotes, getOscillatorSourceNode, getMicSourceNode, d3, fc) {
                 audioVariables.fMax = event.target.value;
                 yScaleHz.domain([0, audioVariables.fMax]);
 
-                d3.select(".axisdisplayProperties.marginLeft").transition().call(axisHz);
+                d3.select(".axisLeft").transition().call(axisHz);
                 
                 let maxHzIndex = notesFrequency.frequency.findIndex(function(elem, index){
                     return elem > audioVariables.fMax;
